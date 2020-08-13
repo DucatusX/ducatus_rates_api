@@ -15,7 +15,7 @@ def get_rates():
 
 def convert(fsym, tsym):
     duc_usd_price = 0.06
-    ducx_usd_price = 0.5
+    ducx_usd_price = 0.6
 
     if fsym == 'USD' and tsym == 'DUC':
         amount = 1 / duc_usd_price
