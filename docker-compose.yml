@@ -10,6 +10,7 @@ services:
     networks:
       duc-rate-net:
   web:
+    env_file: .env
     build:
       context: .
       dockerfile: Dockerfile
