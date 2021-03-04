@@ -28,14 +28,23 @@ class RateRequest(APIView):
         responses={200: rates_response}
     )
     def get(self, request):
-        print(request)
         fsym = request.query_params.get('fsym')
-        print(fsym)
-        tsyms = request.query_params.get('tsyms').split(',')
-        print(tsyms)
-        response = {tsym: convert(fsym, tsym) for tsym in tsyms}
+        tsyms = request.query_params.get('tsyms')
+
+        if fsym and tsyms:
+            tsyms_list = tsyms.split(',')
+            response = {tsym: convert(fsym, tsym) for tsym in tsyms_list}
+        else:
+            # return just DUC and DUCX to USD rate
+            fsyms = ('DUC', 'DUCX')
+            tsym = 'USD'
+
+            response = {}
+            for fsym in fsyms:
+                response[fsym] = {tsym: convert(fsym, tsym)}
 
         return Response(response, status=status.HTTP_200_OK)
+
 
 def convert(fsym, tsym):
     duc_usd_price = DucRate.objects.get(currency='DUC').rate
