@@ -3,11 +3,13 @@ import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from duc_rate_admin.rates.api import get_usd_prices
+from duc_rate_admin.rates.api import get_usd_prices, convert
 from duc_rate_admin.rates.models import DucRate
+from duc_rate_admin.settings import AUTH_API_KEY
 
 
 rates_response = openapi.Response(
@@ -46,19 +48,34 @@ class RateRequest(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
 
-def convert(fsym, tsym):
-    duc_usd_price = DucRate.objects.get(currency='DUC').rate
-    ducx_usd_price = DucRate.objects.get(currency='DUCX').rate
+class RateChangeRequest(APIView):
 
-    if fsym == 'USD' and tsym == 'DUC':
-            amount = 1 / duc_usd_price
-    elif fsym == 'USD' and tsym == 'DUCX':
-            amount = 1 / ducx_usd_price
-    elif fsym == 'DUC' and tsym == 'USD':
-            amount = duc_usd_price
-    elif fsym == 'DUCX' and tsym == 'USD':
-            amount = ducx_usd_price
-    else:
-        amount = 1
-    print(f'amount: {amount}')
-    return amount
+    def post(self, request):
+        data = request.data
+
+        api_key = data.get('api-key')
+
+        if not api_key:
+            raise PermissionDenied
+        else:
+            if api_key != AUTH_API_KEY:
+                raise PermissionDenied
+
+        duc_price = data.get('DUC')
+        ducx_price = data.get('DUCX')
+        duc_price_obj = DucRate.objects.get(currency='DUC')
+        ducx_price_obj = DucRate.objects.get(currency='DUCX')
+        print(duc_price)
+        print(ducx_price)
+
+        if duc_price:
+            duc_price_obj.rate = duc_price
+            print(duc_price_obj.rate)
+            duc_price_obj.save()
+
+        if ducx_price:
+            ducx_price_obj.rate = ducx_price
+            print(ducx_price_obj.rate)
+            ducx_price_obj.save()
+
+        return Response({'DUC': duc_price_obj.rate, 'DUCX': ducx_price_obj.rate}, status=status.HTTP_200_OK)

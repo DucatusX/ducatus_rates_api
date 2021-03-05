@@ -6,6 +6,8 @@ from drf_yasg import openapi
 from rest_framework import status
 from rest_framework import permissions
 
+from duc_rate_admin.rates.views import RateChangeRequest
+
 schema_view = get_schema_view(
     openapi.Info(
         title="duc_rates",
@@ -22,5 +24,6 @@ urlpatterns = [
     path('django-admin/', admin.site.urls),
     path('api/v1/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('api/v1/rates/', include('duc_rate_admin.rates.urls')),
+    path('api/v1/change-rate', RateChangeRequest.as_view())
 ]
 
