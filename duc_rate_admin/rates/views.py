@@ -69,12 +69,12 @@ class RateChangeRequest(APIView):
         print(ducx_price)
 
         if duc_price:
-            duc_price_obj.rate = duc_price
+            duc_price_obj.rate = float(duc_price)
             print(duc_price_obj.rate)
             duc_price_obj.save()
 
         if ducx_price:
-            ducx_price_obj.rate = ducx_price
+            ducx_price_obj.rate = float(ducx_price)
             print(ducx_price_obj.rate)
             ducx_price_obj.save()
 
