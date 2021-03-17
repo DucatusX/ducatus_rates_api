@@ -6,7 +6,7 @@ from duc_rate_admin.consts import CHANGE_RATE
 
 
 class DucRate(models.Model):
-    currency = models.CharField(max_length=20)
+    currency = models.CharField(max_length=20, unique=True)
     rate = models.DecimalField(max_digits=MAX_AMOUNT_LEN, decimal_places=8, default=0.06)
     updated_at = models.DateTimeField(auto_now=True)
 
