@@ -46,36 +46,3 @@ class RateRequest(APIView):
                 response[fsym] = {tsym: convert(fsym, tsym)}
 
         return Response(response, status=status.HTTP_200_OK)
-
-
-class RateChangeRequest(APIView):
-
-    def post(self, request):
-        data = request.data
-
-        api_key = data.get('api-key')
-
-        if not api_key:
-            raise PermissionDenied
-        else:
-            if api_key != AUTH_API_KEY:
-                raise PermissionDenied
-
-        duc_price = data.get('DUC')
-        ducx_price = data.get('DUCX')
-        duc_price_obj = DucRate.objects.get(currency='DUC')
-        ducx_price_obj = DucRate.objects.get(currency='DUCX')
-        print(duc_price)
-        print(ducx_price)
-
-        if duc_price:
-            duc_price_obj.rate = float(duc_price)
-            print(duc_price_obj.rate)
-            duc_price_obj.save()
-
-        if ducx_price:
-            ducx_price_obj.rate = float(ducx_price)
-            print(ducx_price_obj.rate)
-            ducx_price_obj.save()
-
-        return Response({'DUC': duc_price_obj.rate, 'DUCX': ducx_price_obj.rate}, status=status.HTTP_200_OK)
