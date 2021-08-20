@@ -30,7 +30,6 @@ services:
       dockerfile: rates_checker.Dockerfile
     depends_on:
       - db
-      - web
     restart: unless-stopped
     networks:
       duc-rate-net:

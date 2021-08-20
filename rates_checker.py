@@ -31,9 +31,7 @@ def get_rate(tsym):
 if __name__ == "__main__":
     while True:
         rate = get_rate(QUERY_TSYM)
-        duc_rate = DucRate.objects.filter(currency="DUCX").first() or DucRate(
-            currency="DUCX"
-        )
+        duc_rate, _ = DucRate.objects.get_or_create(currency="DUCX")
         duc_rate.rate = Decimal(rate)
         duc_rate.save()
         time.sleep(int(os.getenv("RATES_CHECKER_TIMEOUT", 60)))
