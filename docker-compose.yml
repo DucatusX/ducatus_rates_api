@@ -24,6 +24,16 @@ services:
       - ./duc_rate_admin/rates/migrations:/code/duc_rate_admin/rates/migrations
     networks:
       duc-rate-net:
+  rates_checker:
+    build:
+      context: .
+      dockerfile: rates_checker.Dockerfile
+    depends_on:
+      - db
+      - web
+    restart: unless-stopped
+    networks:
+      duc-rate-net:
 
 
 networks:
