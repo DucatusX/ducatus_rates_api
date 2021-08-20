@@ -16,22 +16,12 @@ class DucRate(models.Model):
 
 def change_related(sender, instance, created, **kwargs):
     '''
-    post_save.disconnnect is for preserve recursion (save calls send which calls save...)
     get_or_create is for creating first models after deploy
     '''
-    if not created:
-        if instance.currency == 'DUC':
-            ducx = DucRate.objects.get_or_create(currency='DUCX')
-            post_save.disconnect(change_related, sender=sender)
-            ducx[0].rate = instance.rate * CHANGE_RATE
-            ducx[0].save()
-            post_save.connect(change_related, sender=sender)
-        elif instance.currency == 'DUCX':
-            duc = DucRate.objects.get_or_create(currency='DUC')
-            post_save.disconnect(change_related, sender=sender)
-            duc[0].rate = instance.rate / CHANGE_RATE
-            duc[0].save()
-            post_save.connect(change_related, sender=sender)
+    if instance.currency == 'DUCX':
+        duc, _ = DucRate.objects.get_or_create(currency='DUC')
+        duc.rate = instance.rate / CHANGE_RATE
+        duc.save()
 
 
 post_save.connect(change_related, sender=DucRate)
