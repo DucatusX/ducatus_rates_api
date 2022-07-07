@@ -15,7 +15,7 @@ def convert(fsym, tsym):
         try:
             rates[coin] = DucRate.objects.get(currency=coin).rate
         except DucRate.DoesNotExist:
-            rates[coin] = 1
+            rates[coin] = None
 
     if fsym == 'USD' and tsym == 'DUC':
         amount = 1 / rates['DUC']
@@ -24,7 +24,7 @@ def convert(fsym, tsym):
     elif fsym in str(SUPPORTED_CURRENCIES) and tsym == 'USD':
         amount = rates[fsym]
     else:
-        amount = 1
+        amount = None
         
     print(f'amount: {amount}')
     
