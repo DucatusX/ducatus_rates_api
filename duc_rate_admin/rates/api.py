@@ -10,18 +10,22 @@ def get_usd_prices():
 
 
 def convert(fsym, tsym):
-    duc_usd_price = DucRate.objects.get(currency='DUC').rate
-    ducx_usd_price = DucRate.objects.get(currency='DUCX').rate
+    rates = {}
+    for coin in SUPPORTED_CURRENCIES:
+        try:
+            rates[coin] = DucRate.objects.get(currency=coin).rate
+        except DucRate.DoesNotExist:
+            rates[coin] = None
 
     if fsym == 'USD' and tsym == 'DUC':
-            amount = 1 / duc_usd_price
+        amount = 1 / rates['DUC']
     elif fsym == 'USD' and tsym == 'DUCX':
-            amount = 1 / ducx_usd_price
-    elif fsym == 'DUC' and tsym == 'USD':
-            amount = duc_usd_price
-    elif fsym == 'DUCX' and tsym == 'USD':
-            amount = ducx_usd_price
+        amount = 1 / rates['DUCX']
+    elif fsym in str(SUPPORTED_CURRENCIES) and tsym == 'USD':
+        amount = rates[fsym]
     else:
-        amount = 1
+        amount = None
+        
     print(f'amount: {amount}')
+    
     return amount
