@@ -14,7 +14,8 @@ SUPPORTED_CURRENCIES = [
     'JWAN',
     'TKF',
     'AA+',
-    'QMN'
+    'QMN',
+    'MPE'
 ]
 
 CHANGE_RATE = 10
