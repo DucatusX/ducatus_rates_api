@@ -15,7 +15,8 @@ SUPPORTED_CURRENCIES = [
     'TKF',
     'AA+',
     'QMN',
-    'MPE'
+    'MPE',
+    "BALISOL"
 ]
 
 CHANGE_RATE = 10
