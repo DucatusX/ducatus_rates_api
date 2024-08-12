@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    "django_extensions",
     'drf_yasg',
     'rest_framework',
     'corsheaders',
@@ -119,6 +119,7 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+SHELL_PLUS = "ptpython"
 
 AUTH_API_KEY = os.getenv('AUTH_API_KEY')
 

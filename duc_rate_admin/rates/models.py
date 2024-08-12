@@ -23,5 +23,15 @@ def change_related(sender, instance, created, **kwargs):
         duc.rate = instance.rate / CHANGE_RATE
         duc.save()
 
+class UsdRate(models.Model):
+    currency = models.CharField(max_length=20, unique=True)
+    rate = models.DecimalField(max_digits=MAX_AMOUNT_LEN, decimal_places=8, default=0.06)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+    @classmethod
+    def get_available_tsyms(cls):
+        return list(UsdRate.objects.values_list("currency", flat=True))
+
 
 post_save.connect(change_related, sender=DucRate)

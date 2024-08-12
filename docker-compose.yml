@@ -1,6 +1,7 @@
 services:
   db:
-    image: postgres
+    image: postgres:13
+    restart: unless-stopped
     environment:
       POSTGRES_DB:
       POSTGRES_USER:
@@ -9,7 +10,7 @@ services:
       - ./.docker/postgres-data:/var/lib/postgresql/data
     networks:
       duc-rate-net:
-  web:
+  web: &web
     env_file: .env
     build:
       context: .
@@ -25,12 +26,12 @@ services:
     networks:
       duc-rate-net:
   rates_checker:
-    build:
-      context: .
-      dockerfile: rates_checker.Dockerfile
+    <<: *web
     depends_on:
       - db
     restart: unless-stopped
+    ports: []
+    command: python3 rates_checker.py
     networks:
       duc-rate-net:
 
