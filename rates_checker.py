@@ -73,7 +73,7 @@ def get_rates_main():
 
 
 if __name__ == "__main__":
-    if not CURRENCY_API_KEY:
+    if not CURRENCY_API_KEY or not COINGECKO_API_KEY:
         raise Exception("Currency API key is not provided")
     
     while True:
