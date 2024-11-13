@@ -55,18 +55,17 @@ def get_rate_coingecko(coin_id, currencies_id):
     if response.ok:
         rate_value = response.json().get(coin_id, {}).get(currencies_id)
         if rate_value:
-            return {coin_id: rate_value}
+            return rate_value
 
-    logging.error(f"Error while trying get {currencies_id} rate for {coin_id}")
+    logging.error(f"Error while trying get {currencies_id} rate for {coin_id} (status code: {response.status_code})")
     return None
 
 
 def get_rates_main():
-
     rates = get_currency_rates(FSYM, TSYMS)
     bnb_usd_rate = get_rate_coingecko("binancecoin", "usd")
     if bnb_usd_rate:
-        rates.update(bnb_usd_rate)
+        rates.update({"BNB": bnb_usd_rate})
     for rate_name, rate_value in rates.items():
         usd_rate, _ = UsdRate.objects.get_or_create(currency=rate_name)
         usd_rate.rate = Decimal(rate_value)
