@@ -18,8 +18,8 @@ logger.setLevel(logging.DEBUG)
 from duc_rate_admin.rates.models import UsdRate
 
 CURRENCY_API_KEY = os.getenv("CURRENCY_API_KEY")
-COINGECKO_API_KEY = os.getenv("COINGECKO_API_KEY")
 COINGECKO_API = os.getenv("COINGECKO_API")
+COINGECKO_API_KEY = os.getenv("COINGECKO_API_KEY")
 
 
 FSYM = "USD"
@@ -45,25 +45,26 @@ def get_currency_rates(tsym, fsyms):
 
 
 def get_rate_coingecko(coin_id, currencies_id):
-    endpoint = f"/simple/price?ids={coin_id}&vs_currencies={currencies_id}"
+    endpoint = COINGECKO_API.format(coin_id, currencies_id)
     headers = {
         "accept": "application/json",
         "x-cg-demo-api-key": COINGECKO_API_KEY
     }
-    response = requests.get(url=COINGECKO_API + endpoint, headers=headers)
-    if (response.status_code == 200 and response.json().get(coin_id, None) and
-        response.json().get(coin_id).get(currencies_id, None)):
-        rates = {coin_id: response.json().get(coin_id).get(currencies_id)}
+    response = requests.get(url=endpoint, headers=headers)
+
+    rates = {}
+    if response.ok and response.json().get(coin_id, {}).get(currencies_id, None):
+        rates[coin_id] = response.json().get(coin_id).get(currencies_id)
     else:
-        rates = {}
         logging.error(f"Error while trying get {currencies_id} rate for {coin_id}")
+
     return rates
 
 
 def get_rates_main():
 
     rates = get_currency_rates(FSYM, TSYMS)
-    rates |= get_rate_coingecko("binancecoin", "usd")
+    rates.update(get_rate_coingecko("binancecoin", "usd"))
     for rate_name, rate_value in rates.items():
         usd_rate, _ = UsdRate.objects.get_or_create(currency=rate_name)
         usd_rate.rate = Decimal(rate_value)
@@ -73,7 +74,7 @@ def get_rates_main():
 
 
 if __name__ == "__main__":
-    if not CURRENCY_API_KEY or not COINGECKO_API_KEY:
+    if not all([CURRENCY_API_KEY, COINGECKO_API, COINGECKO_API_KEY]):
         raise Exception("Currency API key is not provided")
     
     while True:
