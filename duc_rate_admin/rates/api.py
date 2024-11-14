@@ -62,4 +62,4 @@ class CurrencyConverter:
             rate = model.objects.get(currency=sym).rate
             return Decimal(amount) * rate
         except ObjectDoesNotExist:
-            raise ValueError(f"Currency conversion error: The currency '{sym}' is not available.")
+            raise APIException(f"Currency conversion error: The currency '{sym}' is not available.")
