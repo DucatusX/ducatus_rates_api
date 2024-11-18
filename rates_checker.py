@@ -15,9 +15,12 @@ django.setup()
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-from duc_rate_admin.rates.models import UsdRate
+from duc_rate_admin.rates.models import UsdRate, DucRate
 
 CURRENCY_API_KEY = os.getenv("CURRENCY_API_KEY")
+COINGECKO_API = os.getenv("COINGECKO_API")
+COINGECKO_API_KEY = os.getenv("COINGECKO_API_KEY")
+
 
 FSYM = "USD"
 TSYMS = [
@@ -40,7 +43,32 @@ def get_currency_rates(tsym, fsyms):
 
     return rates
 
+
+def get_rate_coingecko(coin_id, currencies_id):
+    endpoint = COINGECKO_API.format(coin_id, currencies_id)
+    headers = {
+        "accept": "application/json",
+        "x-cg-demo-api-key": COINGECKO_API_KEY
+    }
+
+    response = requests.get(url=endpoint, headers=headers)
+    if response.ok:
+        rate_value = response.json().get(coin_id, {}).get(currencies_id)
+        if rate_value:
+            return rate_value
+
+    logging.error(f"Error while trying get {currencies_id} rate for {coin_id} (status code: {response.status_code})")
+    return None
+
+
 def get_rates_main():
+    bnb_usd_rate = get_rate_coingecko("binancecoin", "usd")
+    if bnb_usd_rate:
+        bnb_rate, _ = DucRate.objects.get_or_create(currency="BNB")
+        bnb_rate.rate = Decimal(bnb_usd_rate)
+        bnb_rate.save()
+
+        logging.info(f"Updated rate for BNB: {bnb_usd_rate} USD")
 
     rates = get_currency_rates(FSYM, TSYMS)
     for rate_name, rate_value in rates.items():
@@ -52,8 +80,8 @@ def get_rates_main():
 
 
 if __name__ == "__main__":
-    if not CURRENCY_API_KEY:
-        raise Exception("Currency API key is not provided")
+    if not all([CURRENCY_API_KEY, COINGECKO_API, COINGECKO_API_KEY]):
+        raise Exception("API keys or API url is not provided")
     
     while True:
         try:

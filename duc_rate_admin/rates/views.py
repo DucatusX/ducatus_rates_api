@@ -56,9 +56,9 @@ class RateRequest(APIView):
             response = {tsym: converter.convert(fsym, tsym) for tsym in tsyms_list}
         else:
             # return just DUC and DUCX to USD rate
-            fsyms = ('DUC', 'DUCX')
+            fsyms = ('DUC', 'DUCX', 'BNB')
             tsyms_list = [
-                "USD","INR", "GBP", "EUR", "CAD", "COP", "NGN",
+                "USD", "INR", "GBP", "EUR", "CAD", "COP", "NGN",
                 "BRL", "ARS", "AUD", "JPY", "NZD"
             ]
 
