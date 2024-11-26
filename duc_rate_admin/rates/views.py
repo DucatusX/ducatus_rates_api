@@ -1,5 +1,3 @@
-import json
-import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,7 +7,6 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from duc_rate_admin.rates.api import get_usd_prices, CurrencyConverter
 from duc_rate_admin.rates.models import DucRate, UsdRate
-from duc_rate_admin.settings import AUTH_API_KEY
 
 
 rates_response = openapi.Response(
@@ -55,13 +52,8 @@ class RateRequest(APIView):
 
             response = {tsym: converter.convert(fsym, tsym) for tsym in tsyms_list}
         else:
-            # return just DUC and DUCX to USD rate
-            fsyms = ('DUC', 'DUCX', 'BNB')
-            tsyms_list = [
-                "USD", "INR", "GBP", "EUR", "CAD", "COP", "NGN",
-                "BRL", "ARS", "AUD", "JPY", "NZD"
-            ]
-
+            fsyms = DucRate.objects.values_list("currency", flat=True)
+            tsyms_list = UsdRate.objects.values_list("currency", flat=True)
             response = {}
             for fsym in fsyms:
                 response[fsym] = {tsym: converter.convert(fsym, tsym) for tsym in tsyms_list}
@@ -73,4 +65,3 @@ class RateRequest(APIView):
         for tsym in tsyms:
             if tsym not in available_tsyms:
                 raise ValidationError(f"Tsym is not supported: {tsym}")
-
