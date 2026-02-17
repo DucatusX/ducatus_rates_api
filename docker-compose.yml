@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "250m"
+    max-file: "4"
+
 services:
   db:
     image: postgres:13
@@ -6,6 +12,7 @@ services:
       POSTGRES_DB:
       POSTGRES_USER:
       POSTGRES_PASSWORD:
+    logging: *default-logging
     volumes:
       - ./.docker/postgres-data:/var/lib/postgresql/data
     networks:
@@ -19,6 +26,7 @@ services:
       - "${DOCKER_EXPOSE_PORT?8000}:8000"
     depends_on:
       - db
+    logging: *default-logging
     volumes:
       - ./media/:/code/media
       - ./static/:/code/static
