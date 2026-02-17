@@ -70,6 +70,14 @@ def update_bnb_rate():
 
         logging.info(f"Updated rate for BNB: {bnb_usd_rate} USD")
 
+def update_duc_ducx_rates():
+    ducx_usd_rate = get_rate_coingecko("ducatus", "usd")
+    if ducx_usd_rate:
+        ducx_rate_obj, _ = DucRate.objects.get_or_create(currency="DUCX")
+        ducx_rate_obj.rate = Decimal(ducx_usd_rate)
+        ducx_rate_obj.save()
+
+        logging.info(f"Updated rate for DUCX: {ducx_usd_rate} USD")
 
 def get_rates_main():
     rates = get_currency_rates(FSYM, TSYMS)
@@ -95,6 +103,7 @@ if __name__ == "__main__":
         if not bool(start % RATES_CHECKER_TIMEOUT):
             try:
                 get_rates_main()
+                update_duc_ducx_rates()
             except Exception as e:
                 logging.error(e)
 
