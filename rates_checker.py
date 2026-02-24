@@ -35,7 +35,18 @@ class ApiError(Exception):
 def get_currency_rates(tsym, fsyms):
     currency_client = CurrencyClient(CURRENCY_API_KEY)
     response = currency_client.latest(tsym, fsyms)
-    data = response["data"]
+    if not isinstance(response, dict):
+        logging.error("Unexpected response type from currencyapi: %s", type(response).__name__)
+        return {}
+
+    data = response.get("data")
+    if not data:
+        error = response.get("error")
+        if error:
+            logging.error("Currencyapi error response: %s", error)
+        else:
+            logging.error("Currencyapi response has no 'data': %s", response)
+        return {}
 
     rates = {}
     for rate_name, values in data.items():
@@ -81,6 +92,10 @@ def update_duc_ducx_rates():
 
 def get_rates_main():
     rates = get_currency_rates(FSYM, TSYMS)
+    if not rates:
+        logging.warning("Skipping USD rates update: no rates returned from currencyapi")
+        return
+
     for rate_name, rate_value in rates.items():
         usd_rate, _ = UsdRate.objects.get_or_create(currency=rate_name)
         usd_rate.rate = Decimal(rate_value)
@@ -103,6 +118,9 @@ if __name__ == "__main__":
         if not bool(start % RATES_CHECKER_TIMEOUT):
             try:
                 get_rates_main()
+            except Exception as e:
+                logging.error(e)
+            try:
                 update_duc_ducx_rates()
             except Exception as e:
                 logging.error(e)
