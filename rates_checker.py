@@ -168,7 +168,8 @@ if __name__ == "__main__":
         raise Exception("API keys or API url is not provided")
 
     BNB_CHECKER_TIMEOUT = int(os.getenv("BNB_CHECKER_TIMEOUT", 60))
-    RATES_CHECKER_TIMEOUT = int(os.getenv("RATES_CHECKER_TIMEOUT", 86400))
+    DUCX_CHECKER_TIMEOUT = int(os.getenv("DUCX_CHECKER_TIMEOUT", 60))
+    RATES_CHECKER_TIMEOUT = int(os.getenv("RATES_CHECKER_TIMEOUT", 10800))
 
     DELAY = 1
     start = 0
@@ -179,6 +180,8 @@ if __name__ == "__main__":
                 get_rates_main()
             except Exception as e:
                 logging.error(e)
+
+        if not bool(start % DUCX_CHECKER_TIMEOUT):
             try:
                 update_duc_ducx_rates()
             except Exception as e:
