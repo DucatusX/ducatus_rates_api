@@ -3,3 +3,4 @@
 .docker/
 static/
 */*/migrations
+__pycache__/

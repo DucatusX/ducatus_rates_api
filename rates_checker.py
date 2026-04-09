@@ -1,10 +1,12 @@
 import os
 import sys
 import time
+import json
 import requests
 import logging
 import traceback
 from decimal import Decimal
+import everapi.exceptions
 from currencyapicom import Client as CurrencyClient
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "duc_rate_admin.settings")
@@ -20,6 +22,7 @@ from duc_rate_admin.rates.models import UsdRate, DucRate
 CURRENCY_API_KEY = os.getenv("CURRENCY_API_KEY")
 COINGECKO_API = os.getenv("COINGECKO_API")
 COINGECKO_API_KEY = os.getenv("COINGECKO_API_KEY")
+CURRENCY_API_TIMEOUT = float(os.getenv("CURRENCY_API_TIMEOUT", 10))
 
 
 FSYM = "USD"
@@ -32,9 +35,65 @@ class ApiError(Exception):
     pass
 
 
+class TimeoutCurrencyClient(CurrencyClient):
+    def _request(self, url, method="GET", params=dict(), data=None, return_type=None):
+        url = self.api_base + url
+
+        if self.api_key:
+            self.headers["apikey"] = self.api_key
+
+        if method in ["GET", "DELETE"]:
+            response = requests.request(
+                method,
+                url,
+                headers=self.headers,
+                params=params,
+                timeout=CURRENCY_API_TIMEOUT,
+            )
+        elif method == "POST":
+            response = requests.request(
+                method,
+                url,
+                headers=self.headers,
+                params=params,
+                json=data,
+                timeout=CURRENCY_API_TIMEOUT,
+            )
+        else:
+            raise Exception("Method not supported")
+
+        if response.status_code == 429:
+            if "x-ratelimit-remaining-quota-month" in response.headers:
+                quota = response.headers["x-ratelimit-remaining-quota-month"]
+                if int(quota) <= 0:
+                    raise everapi.exceptions.QuotaExceeded()
+                raise everapi.exceptions.RateLimitExceeded()
+        elif response.status_code == 403:
+            raise everapi.exceptions.NotAllowed()
+        elif response.status_code == 401:
+            raise everapi.exceptions.IncorrectApikey()
+
+        response_obj = json.loads(response.text)
+
+        if "errors" in response_obj:
+            raise everapi.exceptions.ApiError(
+                "API returned errors:", response_obj["errors"]
+            )
+
+        return response_obj
+
+
 def get_currency_rates(tsym, fsyms):
-    currency_client = CurrencyClient(CURRENCY_API_KEY)
-    response = currency_client.latest(tsym, fsyms)
+    currency_client = TimeoutCurrencyClient(CURRENCY_API_KEY)
+    try:
+        response = currency_client.latest(tsym, fsyms)
+    except requests.Timeout:
+        logging.error("Currencyapi request timed out after %s seconds", CURRENCY_API_TIMEOUT)
+        return {}
+    except requests.RequestException as exc:
+        logging.error("Currencyapi request failed: %s", exc)
+        return {}
+
     if not isinstance(response, dict):
         logging.error("Unexpected response type from currencyapi: %s", type(response).__name__)
         return {}
